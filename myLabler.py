@@ -43,23 +43,23 @@ class Labler:
         lineWidth = 2
         for coords in self.boxList:
             cv2.rectangle(self.cpy, (coords[0], coords[1]), (coords[2], coords[3]), line_c, thickness=lineWidth)
-        return self.cpy
+        # return self.cpy
 
     def onMouse(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
-            self.cpy = self.drawROI(param[0])
+            self.drawROI(param[0])
             self.startPt = (x, y)
             self.boxList.append([self.startPt[0], self.startPt[1], 0, 0])
         elif event == cv2.EVENT_LBUTTONUP:
             if self.boxList[-1][0] == x and self.boxList[-1][1] == y:
                 self.boxList.pop()
-                self.cpy = self.drawROI(param[0])
+                self.drawROI(param[0])
             self.startPt = None
         elif event == cv2.EVENT_MOUSEMOVE:
             if self.startPt:
                 self.boxList[-1][2] = x
                 self.boxList[-1][3] = y
-                self.cpy = self.drawROI(param[0])
+                self.drawROI(param[0])
         cv2.imshow('label', cv2.addWeighted(param[0], 0.3, self.cpy, 0.7, 0))
     
     # 윈도우 생성, 마우스 콜백 설정
@@ -98,8 +98,8 @@ class Labler:
             self.startPt = None
 
             # 프로그램이 시작될때 맨처음 이미지 출력
-            cpy = self.drawROI(img)
-            cv2.imshow('label', cpy)
+            self.drawROI(img)
+            cv2.imshow('label', cv2.addWeighted(img, 0.3, self.cpy, 0.7, 0))
             
             while True:
                 key = cv2.waitKey(1) & 0xFF
@@ -125,7 +125,7 @@ class Labler:
                     break
                 elif key == ord('c'): # 모든 사각형 삭제
                     self.boxList.clear()
-                    self.cpy = self.drawROI(img)
+                    self.drawROI(img)
                     cv2.imshow('label', self.cpy)
                 elif key == ord('s'): # 저장
                     with open(self.imageList[self.fileIdx][1], 'w') as f:
@@ -133,7 +133,7 @@ class Labler:
                             f.write(f"[({coord[0]}, {coord[1]}), ({coord[2]}, {coord[3]})]\n")
                 elif key == ord('z'): # 가장 최근 사각형 삭제
                     self.boxList.pop()
-                    self.cpy = self.drawROI(img)
+                    self.drawROI(img)
                     cv2.imshow('label', self.cpy)
 
 if __name__ == '__main__':
