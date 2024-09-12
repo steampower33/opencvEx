@@ -105,12 +105,14 @@ class DataAugmenter():
                     name = os.path.join(self.aug_path, c, 'rotate', split_name[0] + '_' + str(theta * r_cnt) + split_name[1])
                     print(name)
                     cv2.imwrite(name, dst)
+        
+    def run(self):
+        self.make_aug_folder()
+        self.resize_image()
+        self.flip_image()
+        self.rotate_image()
     
 
 if __name__ == '__main__':
     aug = DataAugmenter('floor5')
-    
-    aug.make_aug_folder()
-    aug.resize_image()
-    aug.flip_image()
-    aug.rotate_image()
+    aug.run()
