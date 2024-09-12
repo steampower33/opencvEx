@@ -42,17 +42,20 @@ class DataAugmenter():
             if folder not in self.aug_folders:
                 os.mkdir(os.path.join(self.aug_path, folder))
     
+    def chkFolder(self, c, cmd):
+        # aug 폴더에 resize 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
+            if cmd not in os.listdir(os.path.join(self.aug_path, c)):
+                os.mkdir(os.path.join(self.aug_path, c, cmd))
+            else:
+                for r in os.listdir(os.path.join(self.aug_path, c, cmd)):
+                    os.remove(os.path.join(self.aug_path, c, cmd, r))
+    
     def resize_image(self):
         for c in self.org_folders:
             data_path = os.path.join(self.org_path, c)
             print(data_path)
             
-            # aug 폴더에 resize 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
-            if 'resize' not in os.listdir(os.path.join(self.aug_path, c)):
-                os.mkdir(os.path.join(self.aug_path, c, 'resize'))
-            else:
-                for r in os.listdir(os.path.join(self.aug_path, c, 'resize')):
-                    os.remove(os.path.join(self.aug_path, c, 'resize', r))
+            self.chkFolder(c, 'resize')
                     
             for f in os.listdir(data_path):
                 split_name = os.path.splitext(f)
@@ -68,12 +71,7 @@ class DataAugmenter():
             data_path = os.path.join(self.aug_path, c, 'resize')
             print(data_path)
             
-            # aug 폴더에 flip 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
-            if 'flip' not in os.listdir(os.path.join(self.aug_path, c)):
-                os.mkdir(os.path.join(self.aug_path, c, 'flip'))
-            else:
-                for r in os.listdir(os.path.join(self.aug_path, c, 'flip')):
-                    os.remove(os.path.join(self.aug_path, c, 'flip', r))
+            self.chkFolder(c, 'flip')
                     
             for f in os.listdir(data_path):
                 split_name = os.path.splitext(f)
@@ -91,13 +89,8 @@ class DataAugmenter():
         for c in self.org_folders:
             data_path = os.path.join(self.aug_path, c, 'flip')
             print(data_path)
-            
-            # aug 폴더에 rotate 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
-            if 'rotate' not in os.listdir(os.path.join(self.aug_path, c)):
-                os.mkdir(os.path.join(self.aug_path, c, 'rotate'))
-            else:
-                for r in os.listdir(os.path.join(self.aug_path, c, 'rotate')):
-                    os.remove(os.path.join(self.aug_path, c, 'rotate', r))
+                    
+            self.chkFolder(c, 'rotate')
                     
             for f in os.listdir(data_path):
                 img = cv2.imread(os.path.join(data_path, f), cv2.IMREAD_COLOR)
