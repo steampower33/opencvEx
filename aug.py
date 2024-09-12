@@ -79,16 +79,17 @@ class DataAugmenter():
                 split_name = os.path.splitext(f)
                 
                 img = cv2.imread(os.path.join(data_path, f), cv2.IMREAD_COLOR) # 원본
-                name = os.path.join(self.aug_path, c, 'flip', split_name[0] + split_name[1])
+                name = os.path.join(self.aug_path, c, 'flip', f)
                 cv2.imwrite(name, img)
                 
                 dst = cv2.flip(img, 1) # 좌우 반전
                 name = os.path.join(self.aug_path, c, 'flip', split_name[0] + '_flip' + split_name[1])
+                print(name)
                 cv2.imwrite(name, dst)
     
     def rotate_image(self):
         for c in self.org_folders:
-            data_path = os.path.join(self.aug_path, c, 'rotate')
+            data_path = os.path.join(self.aug_path, c, 'flip')
             print(data_path)
             
             # aug 폴더에 rotate 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
@@ -103,12 +104,13 @@ class DataAugmenter():
                 
                 (h, w) = img.shape[:2]
                 (cX, cY) = (w // 2, h // 2)
-                theta = 45
+                theta = 20
                 split_name = os.path.splitext(f)
                 for r_cnt in range(int(360 / theta)):
-                    M = cv2.getRotationMatrix2D((cX, cY), 45 * r_cnt, 1.0)
+                    M = cv2.getRotationMatrix2D((cX, cY), theta * r_cnt, 1.0)
                     dst = cv2.warpAffine(img, M, (w, h))
-                    name = os.path.join(self.aug_path, c, 'rotate', split_name[0] + '_' + str(45 * r_cnt) + split_name[1])
+                    name = os.path.join(self.aug_path, c, 'rotate', split_name[0] + '_' + str(theta * r_cnt) + split_name[1])
+                    print(name)
                     cv2.imwrite(name, dst)
     
 
