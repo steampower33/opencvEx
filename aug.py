@@ -57,7 +57,7 @@ class DataAugmenter():
             if folder not in self.aug_folders:
                 os.mkdir(os.path.join(self.aug_path, folder))
     
-    def chkFolder(self, c, cmd):
+    def chk_folder(self, c, cmd):
         # aug 폴더에 resize 폴더 있는지 확인하고 없으면 생성 있으면, 파일 모두 삭제
             if cmd not in os.listdir(os.path.join(self.aug_path, c)):
                 os.mkdir(os.path.join(self.aug_path, c, cmd))
@@ -76,7 +76,7 @@ class DataAugmenter():
             data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
             
-            self.chkFolder(c, 'resize')
+            self.chk_folder(c, 'resize')
                     
             for f in os.listdir(data_path):
                 split_name = os.path.splitext(f)
@@ -93,7 +93,7 @@ class DataAugmenter():
             data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
             
-            self.chkFolder(c, 'flip')
+            self.chk_folder(c, 'flip')
                     
             for f in os.listdir(data_path):
                 split_name = os.path.splitext(f)
@@ -113,7 +113,7 @@ class DataAugmenter():
             data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
                     
-            self.chkFolder(c, 'rotate')
+            self.chk_folder(c, 'rotate')
                     
             for f in os.listdir(data_path):
                 img = cv2.imread(os.path.join(data_path, f), cv2.IMREAD_COLOR)
