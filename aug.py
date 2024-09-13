@@ -24,8 +24,18 @@
 
 import cv2, sys, os
 import numpy as np
-from glob import glob
+from enum import Enum
 
+class BeforeProcess(Enum):
+    NONE = 0
+    RESIZE = 1
+    FLIP = 2
+    ROTATE = 3
+
+class BeforeData(Enum):
+    ORG = 0
+    AUG = 1
+    
 class DataAugmenter():
     
     def __init__(self, data_folder):
@@ -36,6 +46,11 @@ class DataAugmenter():
         self.aug_path = os.path.join(self.data_path, 'aug')
         self.org_folders = os.listdir(self.org_path)
         self.aug_folders = os.listdir(self.aug_path)
+        self.before_data_list = None
+        self.before_data_path = None
+        self.before_proc = None
+        self.data = [self.org_path, self.aug_path]
+        self.proc = ['', 'resize', 'flip', 'rotate']
     
     def make_aug_folder(self):
         for folder in self.org_folders:
@@ -50,9 +65,15 @@ class DataAugmenter():
                 for r in os.listdir(os.path.join(self.aug_path, c, cmd)):
                     os.remove(os.path.join(self.aug_path, c, cmd, r))
     
-    def resize_image(self):
-        for c in self.org_folders:
-            data_path = os.path.join(self.org_path, c)
+    def set_before(self, b_data, b_proc):
+        self.before_data_path = self.data[b_data.value]
+        self.before_data_list = os.listdir(self.before_data_path)
+        self.before_proc = self.proc[b_proc.value]
+        
+    def resize_image(self, b_data, b_proc):
+        self.set_before(b_data, b_proc)
+        for c in self.before_data_list:
+            data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
             
             self.chkFolder(c, 'resize')
@@ -66,9 +87,10 @@ class DataAugmenter():
                 print(name)
                 cv2.imwrite(name, dst)
     
-    def flip_image(self):
-        for c in self.aug_folders:
-            data_path = os.path.join(self.aug_path, c, 'resize')
+    def flip_image(self, b_data, b_proc):
+        self.set_before(b_data, b_proc)
+        for c in self.before_data_list:
+            data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
             
             self.chkFolder(c, 'flip')
@@ -85,9 +107,10 @@ class DataAugmenter():
                 print(name)
                 cv2.imwrite(name, dst)
     
-    def rotate_image(self):
-        for c in self.org_folders:
-            data_path = os.path.join(self.aug_path, c, 'flip')
+    def rotate_image(self, b_data, b_proc):
+        self.set_before(b_data, b_proc)
+        for c in self.before_data_list:
+            data_path = os.path.join(self.before_data_path, c, self.before_proc)
             print(data_path)
                     
             self.chkFolder(c, 'rotate')
@@ -108,9 +131,9 @@ class DataAugmenter():
         
     def run(self):
         self.make_aug_folder()
-        self.resize_image()
-        self.flip_image()
-        self.rotate_image()
+        self.resize_image(BeforeData.ORG, BeforeProcess.NONE)
+        self.flip_image(BeforeData.AUG, BeforeProcess.RESIZE)
+        self.rotate_image(BeforeData.AUG, BeforeProcess.FLIP)
     
 
 if __name__ == '__main__':
