@@ -8,9 +8,17 @@ class Labler:
         self.labelPath = labelPath
         self.imageList = self.getImageList()
         self.fileIdx = 0
-        self.boxList = []
+        self.labelList = []
         self.startPt = None
         self.cpy = None
+        self.colors = [(0, 0, 255),  # 빨강
+                       (0, 165, 255),  # 주황
+                       (0, 255, 255),  # 노랑
+                       (0, 255, 0),  # 초록
+                       (255, 0, 0),  # 파랑
+                       (255, 0, 255),  # 남색 
+                       (128, 0, 128)  # 보라
+                       ]
     
     # images에 jpg 파일 확인
     # jpg 파일에 대응 되는 label txt 파일들 확인 -> 없으면 생성
@@ -39,44 +47,87 @@ class Labler:
     def drawROI(self, img):
         # 박스를 그릴 레이어를생성 : cpy
         self.cpy = img.copy()
-        line_c = (128, 128, 255)
+
         lineWidth = 2
-        for coords in self.boxList:
-            cv2.rectangle(self.cpy, (coords[0], coords[1]), (coords[2], coords[3]), line_c, thickness=lineWidth)
-        # return self.cpy
+        for label in self.labelList:
+            class_id, x1, y1, x2, y2 = label
+            line_color = self.colors[class_id]
+
+            # 경계 상자 그리기 (색상, 두께 등은 원하는대로 설정 가능)
+            cv2.rectangle(self.cpy, (x1, y1), (x2, y2), line_color, thickness=lineWidth)
 
     def onMouse(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.drawROI(param[0])
             self.startPt = (x, y)
-            self.boxList.append([self.startPt[0], self.startPt[1], 0, 0])
+            self.labelList.append([0, self.startPt[0], self.startPt[1], 0, 0])
         elif event == cv2.EVENT_LBUTTONUP:
-            if self.boxList[-1][0] == x and self.boxList[-1][1] == y:
-                self.boxList.pop()
+            if self.labelList[-1][0] == x and self.labelList[-1][1] == y:
+                self.labelList.pop()
                 self.drawROI(param[0])
             self.startPt = None
         elif event == cv2.EVENT_MOUSEMOVE:
             if self.startPt:
-                self.boxList[-1][2] = x
-                self.boxList[-1][3] = y
+                self.labelList[-1][3] = x
+                self.labelList[-1][4] = y
                 self.drawROI(param[0])
         cv2.imshow('label', cv2.addWeighted(param[0], 0.3, self.cpy, 0.7, 0))
     
+    def convert_to_yolo_format(self, img, label):
+        """두 점 좌표를 YOLO 형식으로 변환합니다.
+
+        Args:
+            image_width: 이미지 너비
+            image_height: 이미지 높이
+            point1: 좌상단 좌표 (x1, y1)
+            point2: 우하단 좌표 (x2, y2)
+
+        Returns:
+            YOLO 형식 라벨 [x_center, y_center, width, height] (모두 0.0 ~ 1.0 사이의 값)
+        """
+        
+        image_height, image_width = img.shape[:2]  # 이미지 높이, 너비 추출
+        x1, y1 = label[1], label[2]
+        x2, y2 = label[3], label[4]
+
+        # 경계 상자의 너비와 높이 계산
+        bbox_width = x2 - x1
+        bbox_height = y2 - y1
+
+        # 경계 상자 중심 좌표 계산
+        x_center = (x1 + bbox_width / 2) / image_width
+        y_center = (y1 + bbox_height / 2) / image_height
+
+        # 경계 상자 너비와 높이를 이미지 크기에 대한 비율로 계산
+        width = bbox_width / image_width
+        height = bbox_height / image_height
+
+        return [label[0], x_center, y_center, width, height]
+
     # 윈도우 생성, 마우스 콜백 설정
     def setWindowAndCallback(self, img):
         cv2.namedWindow('label')
         cv2.moveWindow('label', 0, 0)
-        cv2.setMouseCallback('label', self.onMouse, [img])
+        cv2.setMouseCallback('label', self.onMouse, [img])  
     
     # 해당 이미지에 매칭되는 labels 확인
     # [(x1, y1), (x2, y2)] -> [x1, y1, x2, y2]
-    def setLabelInfo(self):
-        self.boxList.clear()
+    def setLabelInfo(self, img):
+        self.labelList.clear()
+        
+        img_height, img_width = img.shape[:2]  # 이미지 높이, 너비 추출
         with open(self.imageList[self.fileIdx][1], 'r') as f:
             for line in f:
-                line = line.strip().replace('[', '').replace(']', '').replace(')', '').replace('(', '')  # 괄호 제거
-                coords = line.split(',')
-                self.boxList.append([int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3])])
+                class_id, x_center, y_center, w, h = list(map(float, line.split()))
+
+                class_id = int(class_id)
+                # 상대 좌표를 픽셀 좌표로 변환
+                x1 = int((x_center - w / 2) * img_width)
+                y1 = int((y_center - h / 2) * img_height)
+                x2 = int((x_center + w / 2) * img_width)
+                y2 = int((y_center + h / 2) * img_height)
+
+                self.labelList.append([class_id, x1, y1, x2, y2])
     
     def run(self):
         
@@ -92,7 +143,7 @@ class Labler:
             
             # 해당 이미지에 매칭되는 labels 확인
             # [(x1, y1), (x2, y2)] -> [x1, y1, x2, y2]
-            self.setLabelInfo()
+            self.setLabelInfo(img)
             
             # 시작위치 설정
             self.startPt = None
@@ -124,15 +175,16 @@ class Labler:
                     cv2.destroyAllWindows()
                     break
                 elif key == ord('c'): # 모든 사각형 삭제
-                    self.boxList.clear()
+                    self.labelList.clear()
                     self.drawROI(img)
                     cv2.imshow('label', self.cpy)
                 elif key == ord('s'): # 저장
                     with open(self.imageList[self.fileIdx][1], 'w') as f:
-                        for coord in self.boxList:
-                            f.write(f"[({coord[0]}, {coord[1]}), ({coord[2]}, {coord[3]})]\n")
+                        for label in self.labelList:
+                            line = self.convert_to_yolo_format(img, label)
+                            f.write(f"{line[0]} {' '.join(f'{float(x):.6f}' for x in line[1:6])}\n")
                 elif key == ord('z'): # 가장 최근 사각형 삭제
-                    self.boxList.pop()
+                    self.labelList.pop()
                     self.drawROI(img)
                     cv2.imshow('label', self.cpy)
 
