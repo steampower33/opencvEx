@@ -2,7 +2,7 @@ import cv2, sys, os
 import numpy as np
 from glob import glob
 
-class Labler:
+class Labeler:
     def __init__(self, imagePath, labelPath):
         self.imagePath = imagePath
         self.labelPath = labelPath
@@ -189,6 +189,6 @@ class Labler:
                     cv2.imshow('label', self.cpy)
 
 if __name__ == '__main__':
-    l = Labler('images', 'labels')
+    l = Labeler('images', 'labels')
     
     l.run()
