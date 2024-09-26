@@ -87,7 +87,7 @@ class Labeler:
             cv2.rectangle(self.cpy, box_coords[0], box_coords[1], line_color, cv2.FILLED)
 
             # 텍스트 그리기
-            cv2.putText(self.cpy, label_name, (text_x, text_y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+            cv2.putText(self.cpy, label_name, (text_x, text_y), font, font_scale, (0, 0, 0), font_thickness, cv2.LINE_AA)
 
     def onMouse(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
